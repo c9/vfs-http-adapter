@@ -5,10 +5,10 @@
     ],
     "name": "vfs-http-adapter",
     "description": "A http middleware to wrap vfs instances and expose them via a RESTful interface",
-    "version": "0.2.1",
+    "version": "0.2.3",
     "repository": {
         "type": "git",
-        "url": "git://github.com/c9/vfs.git"
+        "url": "git://github.com/c9/vfs-http-adapter.git"
     },
     "main": "restful.js",
     "dependencies": {},
@@ -16,7 +16,7 @@
     "optionalDependencies": {},
     "licenses" : [{
         "type" : "MIT",
-        "url" : "http://github.com/c9/vfs/raw/master/http-adapter/LICENSE"
+        "url" : "http://github.com/c9/vfs-http-adapter/raw/master/LICENSE"
     }],
     "engines": {
        "node": "*"
