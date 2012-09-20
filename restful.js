@@ -7,6 +7,20 @@ module.exports = function setup(mount, vfs, mountOptions) {
 
   if (!mountOptions) mountOptions = {};
 
+  var errorHandler = mountOptions.errorHandler || function (req, res, err, code) {
+    console.error(err.stack || err);
+    if (code) res.statusCode = code;
+    else if (err.code === "EBADREQUEST") res.statusCode = 400;
+    else if (err.code === "EACCESS") res.statusCode = 403;
+    else if (err.code === "ENOENT") res.statusCode = 404;
+    else if (err.code === "ENOTREADY") res.statusCode = 503;
+    else res.statusCode = 500;
+    var message = (err.stack || err) + "\n";
+    res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Content-Length", Buffer.byteLength(message));
+    res.end(message);
+  };
+
   // Returns a json stream that wraps input object stream
   function jsonEncoder(input, path) {
     var output = new Stream();
@@ -60,17 +74,7 @@ module.exports = function setup(mount, vfs, mountOptions) {
 
     // Instead of using next for errors, we send a custom response here.
     function abort(err, code) {
-      console.error(err.stack || err);
-      if (code) res.statusCode = code;
-      else if (err.code === "EBADREQUEST") res.statusCode = 400;
-      else if (err.code === "EACCESS") res.statusCode = 403;
-      else if (err.code === "ENOENT") res.statusCode = 404;
-      else if (err.code === "ENOTREADY") res.statusCode = 503;
-      else res.statusCode = 500;
-      var message = (err.stack || err) + "\n";
-      res.setHeader("Content-Type", "text/plain");
-      res.setHeader("Content-Length", Buffer.byteLength(message));
-      res.end(message);
+      return errorHandler(req, res, err, code);
     }
 
     var options = {};
