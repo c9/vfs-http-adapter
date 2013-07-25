@@ -30,7 +30,7 @@ module.exports = function setup(mount, vfs, mountOptions) {
       if (path) {
         entry.href = path + entry.name;
         var mime = entry.linkStat ? entry.linkStat.mime : entry.mime;
-        if (mime.match(/(directory|folder)$/)) {
+        if (mime && mime.match(/(directory|folder)$/)) {
           entry.href += "/";
         }
       }
