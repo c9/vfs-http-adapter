@@ -11,9 +11,10 @@ module.exports = function setup(mount, vfs, mountOptions) {
     console.error(err.stack || err);
     if (code) res.statusCode = code;
     else if (err.code === "EBADREQUEST") res.statusCode = 400;
-    else if (err.code === "EACCESS") res.statusCode = 403;
+    else if (err.code === "EACCES") res.statusCode = 403;
     else if (err.code === "ENOENT") res.statusCode = 404;
     else if (err.code === "ENOTREADY") res.statusCode = 503;
+    else if (err.code === "EISDIR") res.statusCode = 503;
     else res.statusCode = 500;
     var message = (err.stack || err) + "\n";
     res.setHeader("Content-Type", "text/plain");
@@ -133,7 +134,13 @@ module.exports = function setup(mount, vfs, mountOptions) {
         if (meta.partialContent) res.statusCode = 206;
 
         if (meta.hasOwnProperty('stream') || options.head) {
-          if (meta.hasOwnProperty('mime')) res.setHeader("Content-Type", meta.mime);
+          if (meta.hasOwnProperty('mime')) {
+            if (mountOptions.noMime) {
+              res.setHeader("Content-Type", "application/octet-stream");
+            } else {
+              res.setHeader("Content-Type", meta.mime);
+            }
+          }
           if (meta.hasOwnProperty("size")) {
             res.setHeader("Content-Length", meta.size);
             if (meta.hasOwnProperty("partialContent")) {
@@ -147,7 +154,9 @@ module.exports = function setup(mount, vfs, mountOptions) {
         if (meta.hasOwnProperty('stream')) {
           meta.stream.on("error", abort);
           if (options.encoding === null) {
-            var base = (req.socket.encrypted ? "https://" : "http://") + req.headers.host + pathJoin(mount, path);
+            var base = 
+                req.restBase ||
+                (req.socket.encrypted ? "https://" : "http://") + req.headers.host + pathJoin(mount, path);
             jsonEncoder(meta.stream, base).pipe(res);
           } else {
             meta.stream.pipe(res);
